@@ -9,32 +9,53 @@
     <ImageView
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="50dp"
         android:src="@drawable/ic_launcher_foreground"
-        android:layout_marginBottom="20dp" />
+        android:layout_marginBottom="16dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="授权测试"
-        android:textSize="26sp"
-        android:textColor="@color/black"
-        android:textStyle="bold"
-        android:layout_marginBottom="6dp" />
+        android:text="授权测试工具"
+        android:textSize="24sp"
+        android:textColor="#333333"
+        android:textStyle="bold" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Android 抖音授权登录"
+        android:text="Android 授权登录测试"
         android:textSize="13sp"
-        android:textColor="@color/gray"
-        android:layout_marginBottom="40dp" />
+        android:textColor="#888888"
+        android:layout_marginBottom="30dp" />
+
+    <TextView
+        android:id="@+id/tvTarget"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="当前目标: QQ"
+        android:textSize="14sp"
+        android:textColor="#E53E3E"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/btnSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:text="切换至抖音"
+        android:textSize="12sp"
+        android:background="@drawable/bg_btn_secondary"
+        android:textColor="#E53E3E"
+        android:stateListAnimator="@null"
+        android:layout_marginBottom="20dp"
+        android:paddingHorizontal="16dp" />
 
     <EditText
         android:id="@+id/etAccount"
         android:layout_width="match_parent"
         android:layout_height="52dp"
-        android:hint="@string/hint_account"
+        android:hint="请输入账号"
         android:textSize="15sp"
         android:background="@drawable/bg_input"
         android:paddingHorizontal="16dp"
@@ -45,9 +66,9 @@
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_marginTop="20dp"
-        android:text="@string/btn_auth"
+        android:text="授权登录"
         android:textSize="16sp"
-        android:textColor="@color/white"
+        android:textColor="#FFFFFF"
         android:background="@drawable/bg_btn"
         android:stateListAnimator="@null"
         android:foreground="?attr/selectableItemBackground" />
@@ -56,11 +77,11 @@
         android:id="@+id/tvResult"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="20dp"
         android:textSize="12sp"
-        android:textColor="@color/gray"
+        android:textColor="#888888"
         android:visibility="gone"
-        android:padding="12dp"
+        android:padding="14dp"
         android:background="#F5F5F5"
         android:lineSpacingExtra="4dp" />
 
