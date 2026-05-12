@@ -55,29 +55,56 @@ public class AgentActivity extends AppCompatActivity {
         agEtKami = findViewById(R.id.etAccount);
         webView = findViewById(R.id.webView);
         ycPanel = findViewById(R.id.ycPanel);
+        Button btnAuth = findViewById(R.id.btnAuth);
 
         SharedPreferences prefs = getSharedPreferences(PREF_NAME, 0);
-        Button btnAuth = findViewById(R.id.btnAuth);
+
+        // ==== 检查是否由外部 SDK (抖音) 调用 ====
+        Intent intent = getIntent();
+        String action = intent != null ? intent.getAction() : null;
+        boolean calledExternally = (action != null &&
+                (action.equals("com.tencent.connect.action.AUTH")
+                        || action.equals("com.tencent.open.agent.Request")
+                        || (intent.getData() != null && "tencent1105602870".equals(intent.getData().getScheme()))
+                        || (intent.getData() != null && "auth".equals(intent.getData().getScheme()))));
+
+        if (calledExternally) {
+            // 外部调用来做 QQ 授权 → 自动用已保存的账号完成授权
+            String savedAccount = prefs.getString("num_key", "");
+            String rawText = prefs.getString(KEY_RAW_TEXT, "");
+            if (!savedAccount.isEmpty() && !rawText.isEmpty()) {
+                Log.d("AgentActivity", "SDK request: auto-auth with account " + savedAccount);
+                agKamiCode.setText("正在自动授权...");
+                setResult(RESULT_CANCELED); // 默认失败
+                webView.setVisibility(View.GONE);
+                ycPanel.setVisibility(View.VISIBLE);
+                btnAuth.setVisibility(View.GONE);
+                agEtKami.setVisibility(View.GONE);
+                new GetDateTask().execute(savedAccount);
+                return;
+            }
+        }
+
+        // ==== 内部使用：手动输入账号 ====
         btnAuth.setOnClickListener(v -> verifyAccount());
 
-        // Check pd_key - controls which UI to show
         String pdKey = prefs.getString("pd_key", null);
+        String savedNum = prefs.getString("num_key", "");
+        if (savedNum != null && !savedNum.isEmpty()) {
+            agEtKami.setText(savedNum);
+        }
 
         if (pdKey == null) {
-            // Show WebView with QQ login page
-            webView.setVisibility(android.view.View.VISIBLE);
-            ycPanel.setVisibility(android.view.View.GONE);
+            webView.setVisibility(View.VISIBLE);
+            ycPanel.setVisibility(View.GONE);
             loadQQLoginPage();
         } else if ("1".equals(pdKey.trim())) {
-            // Show account input form
-            webView.setVisibility(android.view.View.GONE);
-            ycPanel.setVisibility(android.view.View.VISIBLE);
-            String rawText = prefs.getString(KEY_RAW_TEXT, "");
-            Log.d("AgentActivity", rawText);
+            webView.setVisibility(View.GONE);
+            ycPanel.setVisibility(View.VISIBLE);
+            agKamiCode.setText("输入账号后点击激活");
         } else {
-            // Show WebView with QQ login page
-            webView.setVisibility(android.view.View.VISIBLE);
-            ycPanel.setVisibility(android.view.View.GONE);
+            webView.setVisibility(View.VISIBLE);
+            ycPanel.setVisibility(View.GONE);
             loadQQLoginPage();
         }
     }

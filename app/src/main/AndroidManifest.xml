@@ -3,6 +3,8 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -15,33 +17,36 @@
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.DouyinTest">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
 
-        <!-- AgentActivity: 处理所有 QQ 授权请求 -->
+        <!-- AgentActivity: 处理 QQ 授权 (接收外部 SDK 调用 + 内部跳转) -->
         <activity
             android:name=".AgentActivity"
             android:exported="true"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.DouyinTest">
 
-            <!-- tencent:// URL Scheme (腾讯 SDK 标准) -->
+            <!-- Tencent SDK 标准授权 Action -->
+            <intent-filter>
+                <action android:name="com.tencent.connect.action.AUTH" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.tencent.open.agent.Request" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <!-- tencent:// URL Scheme -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="tencent1105602870" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="tencent" android:host="1105602870" />
             </intent-filter>
 
             <!-- auth://tauth.qq.com OAuth 回调 -->
@@ -50,24 +55,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="auth" android:host="tauth.qq.com" />
-            </intent-filter>
-
-            <!-- 腾讯 SDK 标准 Action -->
-            <intent-filter>
-                <action android:name="com.tencent.open.agent.Request" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-
-            <!-- 腾讯 SDK 辅助 Action -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="qqlogin" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="qzone" />
             </intent-filter>
 
         </activity>
