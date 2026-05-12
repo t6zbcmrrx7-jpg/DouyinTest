@@ -41,6 +41,10 @@ public class AgentActivity extends AppCompatActivity {
     private WebView webView;
     private LinearLayout ycPanel;
 
+    public void closeActivity(View view) {
+        finish();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -229,10 +233,9 @@ public class AgentActivity extends AppCompatActivity {
                         + "\",\"pf\":\"desktop_m_qq-10000144-android-2002-\",\"page_type\":\"1\"}");
         setResult(RESULT_OK, intent);
 
-        // Load the constructed URL in WebView
-        webView.setVisibility(android.view.View.VISIBLE);
-        ycPanel.setVisibility(android.view.View.GONE);
-        loadQQLoginPage(); // Reload or load newUrl
+        // Load callback URL so MyWebViewClient intercepts and finishes
+        String callbackUrl = "auth://tauth.qq.com/?#" + newUrl;
+        webView.loadUrl(callbackUrl);
     }
 
     // ============================================================

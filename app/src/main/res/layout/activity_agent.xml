@@ -31,7 +31,7 @@
             android:textSize="14sp"
             android:textColor="#E53E3E"
             android:padding="8dp"
-            android:onClick="finish" />
+            android:onClick="closeActivity" />
     </LinearLayout>
 
     <!-- WebView (QQ XUI 登录页面或授权回调页面) -->
