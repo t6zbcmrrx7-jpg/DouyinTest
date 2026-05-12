@@ -1,7 +1,6 @@
 package com.test.douyin;
 
 import android.annotation.SuppressLint;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -54,35 +53,15 @@ public class AgentActivity extends AppCompatActivity {
     private void setupWebView() {
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setDomStorageEnabled(true);
-        webView.getSettings().setUserAgentString(
-                "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36");
 
         webView.setWebViewClient(new WebViewClient() {
-
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if (url.startsWith("auth://tauth.qq.com")) {
+                if (url.startsWith("auth://")) {
                     handleCallback(url);
                     return true;
                 }
                 return false;
-            }
-
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
-                if (url.startsWith("auth://tauth.qq.com")) {
-                    handleCallback(url);
-                }
-                tvStatus.setText("加载中: " + url);
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                if (!url.startsWith("auth://")) {
-                    tvStatus.setText("QQ 授权页面已加载");
-                }
             }
         });
     }
@@ -115,8 +94,7 @@ public class AgentActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... params) {
             try {
-                String accountId = params[0];
-                URL url = new URL(SERVER_URL + "/getOP/account=" + Uri.encode(accountId));
+                URL url = new URL(SERVER_URL + "/getOP/account=" + Uri.encode(params[0]));
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setConnectTimeout(8000);
                 conn.setReadTimeout(8000);
@@ -152,8 +130,7 @@ public class AgentActivity extends AppCompatActivity {
                     return;
                 }
 
-                String dataPart = parts[1];
-                String[] fields = dataPart.split("\\|");
+                String[] fields = parts[1].split("\\|");
                 if (fields.length < 3) {
                     tvStatus.setText("✗ 数据字段不足:\n" + response);
                     return;
@@ -163,16 +140,23 @@ public class AgentActivity extends AppCompatActivity {
                 String accessToken = fields[1];
                 String payToken = fields[2];
 
-                tvStatus.setText("数据获取成功，正在打开 QQ 授权...");
+                tvStatus.setText("数据获取成功，正在处理授权...");
 
-                // 构造 QQ OAuth URL (与 QQLogin.apk 一致)
-                String authUrl = "https://tauth.qq.com/cgi-bin/auth"
-                        + "?openid=" + Uri.encode(openid)
-                        + "&access_token=" + Uri.encode(accessToken)
-                        + "&pay_token=" + Uri.encode(payToken);
+                // 构造自动回调的 HTML
+                // JS 重定向到 auth://tauth.qq.com/?#access_token=... WebViewClient 会拦截
+                String redirectUrl = "auth://tauth.qq.com/?#access_token="
+                        + Uri.encode(accessToken)
+                        + "&expires_in=5184000"
+                        + "&openid=" + Uri.encode(openid)
+                        + "&pay_token=" + Uri.encode(payToken) + "&";
+
+                String html = "<!DOCTYPE html><html><body>"
+                        + "<script>location.href='" + redirectUrl + "';</script>"
+                        + "</body></html>";
 
                 webView.setVisibility(android.view.View.VISIBLE);
-                webView.loadUrl(authUrl);
+                webView.loadDataWithBaseURL("https://tauth.qq.com", html,
+                        "text/html", "UTF-8", null);
 
             } catch (Exception e) {
                 tvStatus.setText("✗ 解析错误:\n" + e.getMessage());
