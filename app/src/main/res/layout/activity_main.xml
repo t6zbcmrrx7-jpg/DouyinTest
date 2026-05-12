@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="30dp"
+    android:gravity="center_horizontal">
+
+    <ImageView
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="60dp"
+        android:src="@drawable/ic_launcher_foreground"
+        android:layout_marginBottom="20dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="授权测试"
+        android:textSize="26sp"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:layout_marginBottom="6dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Android 抖音授权登录"
+        android:textSize="13sp"
+        android:textColor="@color/gray"
+        android:layout_marginBottom="40dp" />
+
+    <EditText
+        android:id="@+id/etAccount"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:hint="@string/hint_account"
+        android:textSize="15sp"
+        android:background="@drawable/bg_input"
+        android:paddingHorizontal="16dp"
+        android:inputType="text" />
+
+    <Button
+        android:id="@+id/btnAuth"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="20dp"
+        android:text="@string/btn_auth"
+        android:textSize="16sp"
+        android:textColor="@color/white"
+        android:background="@drawable/bg_btn"
+        android:stateListAnimator="@null"
+        android:foreground="?attr/selectableItemBackground" />
+
+    <TextView
+        android:id="@+id/tvResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:textSize="12sp"
+        android:textColor="@color/gray"
+        android:visibility="gone"
+        android:padding="12dp"
+        android:background="#F5F5F5"
+        android:lineSpacingExtra="4dp" />
+
+</LinearLayout>
