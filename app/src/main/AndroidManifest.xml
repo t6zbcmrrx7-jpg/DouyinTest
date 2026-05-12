@@ -6,7 +6,7 @@
 
     <application
         android:allowBackup="true"
-        android:label="@string/app_name"
+        android:label="QQLogin测试工具"
         android:supportsRtl="true"
         android:theme="@style/Theme.DouyinTest"
         android:usesCleartextTraffic="true">
@@ -14,11 +14,25 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:theme="@style/Theme.DouyinTest">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- 接收 tencent1105602870:// URL Scheme (QQ 授权回调) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="tencent1105602870"
+                    android:host="qzapp"
+                    android:pathPrefix="/mqzone/0" />
+            </intent-filter>
+
         </activity>
     </application>
 </manifest>
