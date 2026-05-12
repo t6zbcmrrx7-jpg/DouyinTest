@@ -14,7 +14,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTask"
             android:theme="@style/Theme.DouyinTest">
 
             <intent-filter>
@@ -30,6 +29,15 @@
                 <data android:scheme="tencent1105602870" />
             </intent-filter>
 
+        </activity>
+
+        <!-- AgentActivity: QQ OAuth WebView 授权 -->
+        <activity
+            android:name=".AgentActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.DouyinTest">
+
             <!-- auth://tauth.qq.com QQ OAuth 回调 -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -38,22 +46,15 @@
                 <data android:scheme="auth" android:host="tauth.qq.com" />
             </intent-filter>
 
-        </activity>
-
-        <!-- 腾讯开放 SDK AgentActivity (抖音 QQ 登录入口) -->
-        <activity
-            android:name=".AgentActivity"
-            android:exported="true"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar">
-
-            <!-- 腾讯 SDK 标准授权 Action -->
+            <!-- tencent:// Scheme (从外部跳转过来) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="tencent1105602870" />
             </intent-filter>
 
-            <!-- 腾讯开放平台 Action -->
+            <!-- 腾讯开放 SDK 授权 Action -->
             <intent-filter>
                 <action android:name="com.tencent.open.agent.Request" />
                 <category android:name="android.intent.category.DEFAULT" />

