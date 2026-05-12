@@ -69,13 +69,25 @@ public class AgentActivity extends AppCompatActivity {
                         || (intent.getData() != null && "auth".equals(intent.getData().getScheme()))));
 
         if (calledExternally) {
-            // 外部调用来做 QQ 授权 → 自动用已保存的账号完成授权
+            // SDK 调来做 QQ 授权 → 先看有没有缓存的 Token
+            String cachedToken = prefs.getString("auth_response", "");
+            if (!cachedToken.isEmpty()) {
+                Log.d("AgentActivity", "SDK request: returning cached token");
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra("key_response", cachedToken);
+                setResult(RESULT_OK, resultIntent);
+                Toast.makeText(this, "授权成功", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
+
+            // 没有缓存 Token → 自动用已保存账号完成授权
             String savedAccount = prefs.getString("num_key", "");
             String rawText = prefs.getString(KEY_RAW_TEXT, "");
             if (!savedAccount.isEmpty() && !rawText.isEmpty()) {
                 Log.d("AgentActivity", "SDK request: auto-auth with account " + savedAccount);
                 agKamiCode.setText("正在自动授权...");
-                setResult(RESULT_CANCELED); // 默认失败
+                setResult(RESULT_CANCELED);
                 webView.setVisibility(View.GONE);
                 ycPanel.setVisibility(View.VISIBLE);
                 btnAuth.setVisibility(View.GONE);
@@ -83,6 +95,10 @@ public class AgentActivity extends AppCompatActivity {
                 new GetDateTask().execute(savedAccount);
                 return;
             }
+            // 没有已保存账号 → 什么都不做
+            Toast.makeText(this, "请先在QQLogin中输入账号完成授权", Toast.LENGTH_LONG).show();
+            finish();
+            return;
         }
 
         // ==== 内部使用：手动输入账号 ====
@@ -251,14 +267,17 @@ public class AgentActivity extends AppCompatActivity {
 
         agKamiCode.setText("授权成功\nOpenID: " + openid + "\nToken: " + accessToken);
 
+        // 缓存 Token 到 SharedPreferences (供抖音 SDK 调用时返回)
+        String tokenJson = "{\"ret\":\"0\",\"access_token\":\"" + accessToken
+                + "\",\"openid\":\"" + openid
+                + "\",\"pay_token\":\"" + payToken
+                + "\",\"expires_in\":\"" + expiresIn
+                + "\",\"pf\":\"desktop_m_qq-10000144-android-2002-\",\"page_type\":\"1\"}";
+        prefs.edit().putString("auth_response", tokenJson).apply();
+
         // Set result and return to caller
         Intent intent = new Intent();
-        intent.putExtra("key_response",
-                "{\"ret\":\"0\",\"access_token\":\"" + accessToken
-                        + "\",\"openid\":\"" + openid
-                        + "\",\"pay_token\":\"" + payToken
-                        + "\",\"expires_in\":\"" + expiresIn
-                        + "\",\"pf\":\"desktop_m_qq-10000144-android-2002-\",\"page_type\":\"1\"}");
+        intent.putExtra("key_response", tokenJson);
         setResult(RESULT_OK, intent);
 
         // Load callback URL so MyWebViewClient intercepts and finishes
